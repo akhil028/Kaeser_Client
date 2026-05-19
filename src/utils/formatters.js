@@ -42,7 +42,7 @@ export function getApiErrorMessage(error) {
   }
 
   if (/Network Error/i.test(rawMessage)) {
-    return 'The frontend could not reach the backend API on port 3001. Start the backend server and verify the API URL.'
+    return 'The frontend could not reach the backend API. Start the backend server and verify the API URL.'
   }
 
   if (/timeout/i.test(rawMessage)) {

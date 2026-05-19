@@ -13,7 +13,7 @@ apiClient.interceptors.response.use((response) => {
   if (!contentType.includes('application/json')) {
     const error = new Error(
       'Expected JSON from the backend but received a non-JSON response. ' +
-        'Check that the API server is running on port 3001 and that the Vite proxy is configured.',
+        'Check that the API server is running and that the Vite proxy is configured.',
     )
     error.response = response
     throw error

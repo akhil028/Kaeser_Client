@@ -41,7 +41,7 @@ export function DashboardHeader({ refreshing, onRefresh }) {
             variant="h2"
             sx={{ color: '#0f172a', lineHeight: 1.1, fontSize: '1.05rem' }}
           >
-            Kaeser Monitor
+            SBG Monitor
           </Typography>
           <Typography
             variant="caption"
