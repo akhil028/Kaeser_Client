@@ -3,12 +3,10 @@ import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded'
 import PrecisionManufacturingRoundedIcon from '@mui/icons-material/PrecisionManufacturingRounded'
 import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRounded'
 import HealthAndSafetyRoundedIcon from '@mui/icons-material/HealthAndSafetyRounded'
-import MonitorHeartRoundedIcon from '@mui/icons-material/MonitorHeartRounded'
 
-const TAB_ORDER = ['live_status', 'current', 'compressor', 'system', 'diagnosis']
+const TAB_ORDER = ['current', 'compressor', 'system', 'diagnosis']
 
 const TAB_ICONS = {
-  live_status: <MonitorHeartRoundedIcon sx={{ fontSize: 14 }} />,
   current: <DashboardRoundedIcon sx={{ fontSize: 14 }} />,
   compressor: <PrecisionManufacturingRoundedIcon sx={{ fontSize: 14 }} />,
   system: <SettingsSuggestRoundedIcon sx={{ fontSize: 14 }} />,
