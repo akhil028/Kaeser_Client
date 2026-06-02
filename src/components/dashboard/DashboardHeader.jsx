@@ -1,9 +1,50 @@
-import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
 import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded'
 import MonitorHeartRoundedIcon from '@mui/icons-material/MonitorHeartRounded'
-import SensorsRoundedIcon from '@mui/icons-material/SensorsRounded'
+import { formatRelativeTime } from '../../utils/formatters'
 
-export function DashboardHeader({ refreshing, onRefresh }) {
+function LiveIndicator({ refreshing, lastUpdated }) {
+  const relative = lastUpdated ? formatRelativeTime(lastUpdated) : ''
+  const dotColor = refreshing ? '#155eef' : '#12b76a'
+
+  return (
+    <Stack direction="row" spacing={0.6} sx={{ alignItems: 'center', mr: 0.5 }}>
+      <Box
+        sx={{
+          position: 'relative',
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          backgroundColor: dotColor,
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '50%',
+            backgroundColor: dotColor,
+            animation: 'sbgPulse 1.8s ease-out infinite',
+          },
+          '@keyframes sbgPulse': {
+            '0%': { transform: 'scale(1)', opacity: 0.6 },
+            '100%': { transform: 'scale(2.6)', opacity: 0 },
+          },
+        }}
+      />
+      <Box sx={{ lineHeight: 1 }}>
+        <Typography
+          sx={{ fontSize: '0.66rem', fontWeight: 700, color: '#067647', lineHeight: 1.1 }}
+        >
+          {refreshing ? 'Syncing' : 'Live'}
+        </Typography>
+        <Typography sx={{ fontSize: '0.6rem', color: 'text.secondary', lineHeight: 1.1 }}>
+          {relative ? `Updated ${relative}` : 'Awaiting data'}
+        </Typography>
+      </Box>
+    </Stack>
+  )
+}
+
+export function DashboardHeader({ refreshing, onRefresh, lastUpdated }) {
   return (
     <Box
       sx={{
@@ -31,7 +72,7 @@ export function DashboardHeader({ refreshing, onRefresh }) {
         },
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <Box
           sx={{
             width: 30,
@@ -68,20 +109,8 @@ export function DashboardHeader({ refreshing, onRefresh }) {
         </Box>
       </Stack>
 
-      <Stack direction="row" spacing={0.75} alignItems="center">
-        <Chip
-          icon={<SensorsRoundedIcon sx={{ fontSize: 12 }} />}
-          label="Live"
-          size="small"
-          sx={{
-            height: 22,
-            backgroundColor: 'rgba(18, 183, 106, 0.12)',
-            color: '#067647',
-            border: '1px solid rgba(18, 183, 106, 0.35)',
-            '& .MuiChip-icon': { color: '#12b76a' },
-            '& .MuiChip-label': { px: 0.75 },
-          }}
-        />
+      <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+        <LiveIndicator refreshing={refreshing} lastUpdated={lastUpdated} />
         <Button
           variant="contained"
           size="small"

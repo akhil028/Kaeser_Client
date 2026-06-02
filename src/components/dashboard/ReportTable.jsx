@@ -19,21 +19,23 @@ import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
 function getStateVisual(state) {
   const normalized = String(state || '').toLowerCase()
 
-  if (normalized.includes('a')) {
-    return {
-      color: '#b42318',
-      backgroundColor: '#fef3f2',
-      borderColor: 'rgba(180, 35, 24, 0.2)',
-      icon: <ErrorRoundedIcon sx={{ fontSize: '0.75rem !important' }} />,
-    }
-  }
-
-  if (normalized.includes('w')) {
+  // Warnings must be checked before alarms: the word "warning" contains an "a",
+  // so an alarm-first substring check would misclassify every warning as an alarm.
+  if (/warn/.test(normalized)) {
     return {
       color: '#b54708',
       backgroundColor: '#fffaeb',
       borderColor: 'rgba(181, 71, 8, 0.2)',
       icon: <WarningAmberRoundedIcon sx={{ fontSize: '0.75rem !important' }} />,
+    }
+  }
+
+  if (/alarm|fault|error|trip|stör/.test(normalized)) {
+    return {
+      color: '#b42318',
+      backgroundColor: '#fef3f2',
+      borderColor: 'rgba(180, 35, 24, 0.2)',
+      icon: <ErrorRoundedIcon sx={{ fontSize: '0.75rem !important' }} />,
     }
   }
 
@@ -49,7 +51,7 @@ function EmptyTableState({ message, colSpan = 5 }) {
   return (
     <TableRow>
       <TableCell colSpan={colSpan} sx={{ py: 4, border: 0 }}>
-        <Stack alignItems="center" spacing={0.5}>
+        <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
           <Box
             sx={{
               width: 32,
@@ -73,90 +75,7 @@ function EmptyTableState({ message, colSpan = 5 }) {
   )
 }
 
-function LiveStatusTable({ rows }) {
-  return (
-    <TableContainer
-      component={Paper}
-      elevation={0}
-      sx={{
-        flex: 1,
-        minHeight: 0,
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2,
-        overflow: 'auto',
-        boxShadow: '0 6px 18px rgba(15, 23, 42, 0.04)',
-      }}
-    >
-      <Table stickyHeader size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ backgroundColor: '#f9fafb', top: 0 }}>Scraped At</TableCell>
-            <TableCell sx={{ backgroundColor: '#f9fafb', top: 0 }} align="right">
-              Pressure (bar)
-            </TableCell>
-            <TableCell sx={{ backgroundColor: '#f9fafb', top: 0 }} align="right">
-              Temperature (°C)
-            </TableCell>
-            <TableCell sx={{ backgroundColor: '#f9fafb', top: 0 }}>Display Time</TableCell>
-            <TableCell sx={{ backgroundColor: '#f9fafb', top: 0 }} align="right">
-              Run (h)
-            </TableCell>
-            <TableCell sx={{ backgroundColor: '#f9fafb', top: 0 }} align="right">
-              Load (h)
-            </TableCell>
-            <TableCell sx={{ backgroundColor: '#f9fafb', top: 0 }} align="right">
-              Maintenance (h)
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row, index) => (
-            <TableRow
-              key={`${row.scrapedAt || 'status'}-${index}`}
-              hover
-              sx={{
-                backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafbff',
-                transition: 'background-color 0.15s ease',
-                '&:last-child td': { borderBottom: 0 },
-                '&:hover': { backgroundColor: '#f4f7ff' },
-              }}
-            >
-              <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
-                {row.scrapedAt || '-'}
-              </TableCell>
-              <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {row.pressureBar ?? '-'}
-              </TableCell>
-              <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {row.temperatureC ?? '-'}
-              </TableCell>
-              <TableCell>{row.displayTime || '-'}</TableCell>
-              <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {row.runHours ?? '-'}
-              </TableCell>
-              <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {row.loadHours ?? '-'}
-              </TableCell>
-              <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {row.maintenanceHours ?? '-'}
-              </TableCell>
-            </TableRow>
-          ))}
-          {rows.length === 0 ? (
-            <EmptyTableState message="No live status yet" colSpan={7} />
-          ) : null}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  )
-}
-
-export function ReportTable({ rows, tabKey }) {
-  if (tabKey === 'live_status') {
-    return <LiveStatusTable rows={rows} />
-  }
-
+export function ReportTable({ rows }) {
   return (
     <TableContainer
       component={Paper}

@@ -3,7 +3,7 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded'
 
 export function DashboardLoadingState() {
   return (
-    <Stack alignItems="center" spacing={1.25} sx={{ py: 8 }}>
+    <Stack spacing={1.25} sx={{ py: 8, alignItems: 'center' }}>
       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
         <CircularProgress size={32} thickness={4} sx={{ color: '#b42318' }} />
         <CircularProgress

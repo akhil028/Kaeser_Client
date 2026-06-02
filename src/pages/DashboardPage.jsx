@@ -7,8 +7,12 @@ import { ReportSummary } from '../components/dashboard/ReportSummary'
 import { ReportTable } from '../components/dashboard/ReportTable'
 import { SystemStatusPanel } from '../components/dashboard/SystemStatusPanel'
 import { DashboardErrorState, DashboardLoadingState } from '../components/dashboard/DashboardState'
-import { fetchLatestReport, triggerScrapeRun } from '../services/reportService'
-import { getApiErrorMessage, mapReportGroupsByKey } from '../utils/formatters'
+import { fetchCompressorInfo, fetchLatestReport, triggerScrapeRun } from '../services/reportService'
+import {
+  getApiErrorMessage,
+  hasUsefulStatusSnapshot,
+  mapReportGroupsByKey,
+} from '../utils/formatters'
 
 const LIVE_REFRESH_INTERVAL_MS = 60_000
 
@@ -16,20 +20,27 @@ export function DashboardPage() {
   const [activeSection, setActiveSection] = useState('system_status')
   const [activeTab, setActiveTab] = useState('current')
   const [data, setData] = useState(null)
+  const [compressorInfo, setCompressorInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
     let cancelled = false
 
     const loadLatestReport = async ({ isInitial }) => {
       try {
-        const latestData = await fetchLatestReport()
+        const [latestData, latestCompressorInfo] = await Promise.all([
+          fetchLatestReport(),
+          fetchCompressorInfo().catch(() => null),
+        ])
         if (cancelled) {
           return
         }
         setData(latestData)
+        setCompressorInfo(latestCompressorInfo)
+        setLastUpdated(new Date())
         setError('')
       } catch (requestError) {
         if (cancelled) {
@@ -64,10 +75,22 @@ export function DashboardPage() {
 
     try {
       const latestData = await triggerScrapeRun()
+      const latestCompressorInfo = await fetchCompressorInfo().catch(() => compressorInfo)
       setData(latestData)
+      setCompressorInfo(latestCompressorInfo)
+      setLastUpdated(new Date())
       setError('')
     } catch (requestError) {
-      setError(getApiErrorMessage(requestError))
+      try {
+        const latestData = await fetchLatestReport()
+        const latestCompressorInfo = await fetchCompressorInfo().catch(() => compressorInfo)
+        setData(latestData)
+        setCompressorInfo(latestCompressorInfo)
+        setLastUpdated(new Date())
+        setError('')
+      } catch {
+        setError(getApiErrorMessage(requestError))
+      }
     } finally {
       setRefreshing(false)
       setLoading(false)
@@ -75,6 +98,10 @@ export function DashboardPage() {
   }
 
   const groups = useMemo(() => mapReportGroupsByKey(data), [data])
+  const hasData =
+    Boolean(
+      data?.reportGroups?.some((group) => Array.isArray(group?.reports) && group.reports.length > 0),
+    ) || hasUsefulStatusSnapshot(data?.statusSnapshot)
   const resolvedActiveTab = groups[activeTab] ? activeTab : 'current'
   const currentGroup = groups[resolvedActiveTab]
   const rows = currentGroup?.reports || []
@@ -111,7 +138,11 @@ export function DashboardPage() {
             boxShadow: '0 12px 28px rgba(15, 23, 42, 0.06)',
           }}
         >
-          <DashboardHeader refreshing={refreshing} onRefresh={handleRefresh} />
+          <DashboardHeader
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            lastUpdated={lastUpdated}
+          />
 
           <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
             <DashboardSidebar activeSection={activeSection} onChange={setActiveSection} />
@@ -130,10 +161,15 @@ export function DashboardPage() {
             >
               {loading ? <DashboardLoadingState /> : null}
 
-              {!loading ? <DashboardErrorState error={error} onRetry={handleRefresh} /> : null}
+              {!loading && !hasData ? (
+                <DashboardErrorState error={error} onRetry={handleRefresh} />
+              ) : null}
 
               {!loading && activeSection === 'system_status' ? (
-                <SystemStatusPanel snapshot={data?.statusSnapshot} />
+                <SystemStatusPanel
+                  snapshot={data?.statusSnapshot}
+                  compressorInfo={compressorInfo}
+                />
               ) : null}
 
               {!loading && activeSection === 'messages' && currentGroup ? (
@@ -147,7 +183,7 @@ export function DashboardPage() {
                     onChange={setActiveTab}
                   />
                   <ReportSummary title={currentGroup.title} rowCount={rows.length} />
-                  <ReportTable rows={rows} tabKey={resolvedActiveTab} />
+                  <ReportTable rows={rows} />
                 </Stack>
               ) : null}
             </Box>
